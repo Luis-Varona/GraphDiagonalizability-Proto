@@ -5,9 +5,9 @@ module ProtoBandwidthBounds
     using LinearAlgebra: rank
     using Combinatorics: combinations
     
-    include("../modules/LaplacianSpectra.jl")
-    include("../modules/KOrthogonalizability.jl")
-    include("../modules/GraphObjects.jl")
+    include("../../modules/LaplacianSpectra.jl")
+    include("../../modules/KOrthogonalizability.jl")
+    include("../../modules/GraphObjects.jl")
     
     using .LaplacianSpectra: integer_eigvals_by_multi, eigvecs_zerooneneg
     using .KOrthogonalizability: is_k_orthogonalizable
@@ -182,7 +182,9 @@ module ProtoBandwidthBounds
         λ::Int64,
         μ::Int64;
         min_zerooneneg::Int64 = 1,
-        min_oneneg::Union{Float64, Int64} = 1
+        max_zerooneneg::Int64 = μ,
+        min_oneneg::Union{Float64, Int64} = 1,
+        max_oneneg::Union{Float64, Int64} = μ
     )::Tuple{Union{Float64, Int64}, Union{Float64, Int64}, Matrix{Int64}, Matrix{Int64}}
         
         n = size(L, 1)

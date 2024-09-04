@@ -7,7 +7,7 @@ module A
     using Graphs: SimpleGraph
     using MolecularGraph: subgraph_monomorphisms
     
-    include("../modules/OrthogonalityGraphs.jl")
+    include("../../../modules/OrthogonalityGraphs.jl")
     using .OrthogonalityGraphs: orthograph_complement
     
     
@@ -177,7 +177,7 @@ module B
     using Graphs: SimpleGraph
     using MolecularGraph: subgraph_monomorphisms
     
-    include("../modules/OrthogonalityGraphs.jl")
+    include("../../../modules/OrthogonalityGraphs.jl")
     using .OrthogonalityGraphs: orthograph_complement
     
     

@@ -1,7 +1,7 @@
 using BenchmarkTools
 using LinearAlgebra: kron
 
-include("../../modules/KOrthogonalizability.jl")
+include("../../../modules/KOrthogonalizability.jl")
 include("KOrthogonalizability.jl")
 is_k_orthogonalizable = KOrthogonalizability.is_k_orthogonalizable
 is_k_orthogonalizable2 = KOrthogonalizability2.is_k_orthogonalizable

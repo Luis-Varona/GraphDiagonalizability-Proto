@@ -1,4 +1,4 @@
-include("../modules/KOrthogonalizability.jl")
+include("../../modules/KOrthogonalizability.jl")
 using .KOrthogonalizability: is_k_orthogonalizable
 
 # order = sample(1:11, 11, replace = false);
