@@ -1,0 +1,2 @@
+# motzkin_humps(n::Int64)::Int64 = sum([binomial(n, k)*binomial(n - k, k)/2 for k in 1:n])
+motzkin_humps(n::Int64)::Int64 = Int64(sum([binomial(n, k)*binomial(n - k, k) for k in 1:floor(Int64, n/2)])/2)
