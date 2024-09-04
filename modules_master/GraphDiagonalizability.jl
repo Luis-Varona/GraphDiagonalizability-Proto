@@ -12,7 +12,6 @@ module GraphDiagonalizability
     using Combinatorics: combinations
     using Intervals: Interval, Closed
     using LinearAlgebra: rank
-    using RowEchelon: rref_with_pivots
     
     
     #- FUNCTION: `bandwidths_zerooneneg`

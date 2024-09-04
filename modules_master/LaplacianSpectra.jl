@@ -9,6 +9,7 @@ module LaplacianSpectra
     using DataStructures: counter
     using ElasticArrays: ElasticMatrix
     using LinearAlgebra: eigvals, rank
+    using RowEchelon: rref_with_pivots
     
     
     #- FUNCTION: `is_spectrum_integral`
