@@ -15,7 +15,7 @@ module LaplacianSpectra
     """
         is_spectrum_integral(X)
     
-    Determine whether an integer matrix is spectrum-integral and find its eigenvalues if so.
+    Determine whether an integer matrix is spectrum integral and find its eigenvalues if so.
     
     If an undirected Laplacian matrix has any non-integer eigenvalues, the graph it
     represents cannot be `{-1,0,1}`-diagonalizable (assuming integer edge weights).
