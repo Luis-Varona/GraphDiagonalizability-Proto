@@ -44,7 +44,7 @@ module LaplacianSpectra
                  0   0  -1  -1   0   2];
     
     julia> is_spectrum_integral(L)
-    (true, [0, 4, 3, 3, 1, 1], [0 => 1, 4 => 1, 3 => 2, 1 => 2])
+    (true, [0, 4, 1, 1, 3, 3], [0 => 1, 4 => 1, 1 => 2, 3 => 2])
     ```
     
     Test a weighted Laplacian matrix of the star graph `S_5`:
