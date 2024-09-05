@@ -6,6 +6,7 @@ module LaplacianSpectra
     include("EigenvectorGenerators.jl")
     using .EigenvectorGenerators: potential_kernel_eigvecs, potential_nonkernel_eigvecs
     
+    using Combinatorics: combinations
     using DataStructures: counter
     using ElasticArrays: ElasticMatrix
     using LinearAlgebra: eigvals, rank
@@ -116,9 +117,9 @@ module LaplacianSpectra
         of matrices) corresponding to each unique eigenvalue in `λ_counts`.
     - `cols_oneneg::Vector{Vector{Int64}}`: an array of all column indices of each matrix
         in `eigvecs` corresponding to `{-1,1}`-eigenvectors in that eigenspace.
-    - `zerooneneg_bases::BitVector`: a Boolean array indicating whether each eigenspace has
+    - `bases_zerooneneg::BitVector`: a Boolean array indicating whether each eigenspace has
         enough linearly independent `{-1,0,1}`-vectors to form a basis set.
-    - `oneneg_bases::BitVector`: a Boolean array indicating whether each eigenspace has
+    - `bases_oneneg::BitVector`: a Boolean array indicating whether each eigenspace has
         enough linearly independent `{-1,1}`-vectors to form a basis set.
     
     # Examples
@@ -135,7 +136,7 @@ module LaplacianSpectra
      3 => 2
      0 => 3
     
-    julia> (eigvecs, cols_oneneg, zerooneneg_bases, oneneg_bases) = eigvecs_zerooneneg(
+    julia> (eigvecs, cols_oneneg, bases_zerooneneg, bases_oneneg) = eigvecs_zerooneneg(
                L,
                λ_counts,
            );
@@ -156,7 +157,7 @@ module LaplacianSpectra
      1   1  1  -1  -1  -1  0   0  0  1  -1  0  1
      1   1  1  -1  -1  -1  0   0  0  1  -1  0  1
     
-    julia> (cols_oneneg, zerooneneg_bases, oneneg_bases)
+    julia> (cols_oneneg, bases_zerooneneg, bases_oneneg)
     ([Int64[], [1, 2, 4, 5]], Bool[1, 1], Bool[0, 1])
     ```
     
@@ -177,7 +178,7 @@ module LaplacianSpectra
      8 => 1
      4 => 2
     
-    julia> (eigvecs, cols_oneneg, zerooneneg_bases, oneneg_bases) = eigvecs_zerooneneg(
+    julia> (eigvecs, cols_oneneg, bases_zerooneneg, bases_oneneg) = eigvecs_zerooneneg(
                L,
                λ_counts,
            );
@@ -221,7 +222,7 @@ module LaplacianSpectra
       0   0   0   0
       0   0   0   0
     
-    julia> (cols_oneneg, zerooneneg_bases, oneneg_bases)
+    julia> (cols_oneneg, bases_zerooneneg, bases_oneneg)
     ([[1], Int64[], Int64[], Int64[], Int64[]], Bool[1, 1, 0, 1, 1], Bool[1, 0, 0, 0, 0])
     ```
     """
@@ -234,32 +235,32 @@ module LaplacianSpectra
         if n == 0 # The Laplacian matrix of the null graph has no eigenspaces
             eigvecs = Matrix{Int64}[]
             cols_oneneg = Vector{Int64}[]
-            zerooneneg_bases = trues(0)
-            oneneg_bases = trues(0)
+            bases_zerooneneg = trues(0)
+            bases_oneneg = trues(0)
         # Every vector is an eigenvector of the zero matrix, which only has a 0-eigenspace
         elseif iszero(L)
             eigvecs = [hcat(collect(potential_kernel_eigvecs(n))...)]
             cols_oneneg = [findall(v -> !any(v .== 0), eachcol(eigvecs[1]))]
-            zerooneneg_bases = trues(1)
-            oneneg_bases = trues(1)
+            bases_zerooneneg = trues(1)
+            bases_oneneg = trues(1)
         # Only complete graphs with uniform edge weights have multiplicities [1, n - 1]
         elseif sort(last.(λ_counts)) == [1, n - 1]
             (
                 eigvecs,
                 cols_oneneg,
-                zerooneneg_bases,
-                oneneg_bases,
+                bases_zerooneneg,
+                bases_oneneg,
             ) = _completegraph_eigvecs_zerooneneg(λ_counts)
         else # All graphs except null, empty, and uniformly weighted complete graphs
             (
                 eigvecs,
                 cols_oneneg,
-                zerooneneg_bases,
-                oneneg_bases,
+                bases_zerooneneg,
+                bases_oneneg,
             ) = _generalgraph_eigvecs_zerooneneg(L, λ_counts)
         end
         
-        return (eigvecs, cols_oneneg, zerooneneg_bases, oneneg_bases)
+        return (eigvecs, cols_oneneg, bases_zerooneneg, bases_oneneg)
     end
     
     
@@ -276,8 +277,8 @@ module LaplacianSpectra
     # Returns
     - `eigvecs::Vector{Matrix{Int64}}`: ADD LATER
     - `cols_oneneg::Vector{Vector{Int64}}`: ADD LATER
-    - `zerooneneg_bases::BitVector`: ADD LATER
-    - `oneneg_bases::BitVector`: ADD LATER
+    - `bases_zerooneneg::BitVector`: ADD LATER
+    - `bases_oneneg::BitVector`: ADD LATER
     """
     function _generalgraph_eigvecs_zerooneneg(
         L::AbstractMatrix{Int64},
@@ -311,10 +312,14 @@ module LaplacianSpectra
         cols_oneneg = _get_cols_oneneg(eigvecs, idx_kernel, n)
         
         # Test for linearly independent spanning {-1,0,1}- and {-1,1}-eigenbases
-        zerooneneg_bases = (rank.(eigvecs, 1e-5) .== multis)
-        oneneg_bases = (rank.(getindex.(eigvecs, :, cols_oneneg), 1e-5) .== multis)
+        bases_zerooneneg = _column_span_basis.(eigvecs)
+        bases_oneneg = _column_span_basis.(getindex.(eigvecs, :, cols_oneneg))
         
-        return (eigvecs, cols_oneneg, zerooneneg_bases, oneneg_bases)
+        # {-1,1}-bases are preferable to {-1,0,1}-bases whenever they exist
+        idxs_replace = (length.(bases_zerooneneg) .== length.(bases_oneneg))
+        bases_zerooneneg[idxs_replace] = copy(bases_oneneg[idxs_replace])
+        
+        return (eigvecs, cols_oneneg, bases_zerooneneg, bases_oneneg)
     end
     
     
@@ -330,8 +335,8 @@ module LaplacianSpectra
     # Returns
     - `eigvecs::Vector{Matrix{Int64}}`: ADD LATER
     - `cols_oneneg::Vector{Vector{Int64}}`: ADD LATER
-    - `zerooneneg_bases::BitVector`: ADD LATER
-    - `oneneg_bases::BitVector`: ADD LATER
+    - `bases_zerooneneg::BitVector`: ADD LATER
+    - `bases_oneneg::BitVector`: ADD LATER
     """
     function _completegraph_eigvecs_zerooneneg(λ_counts::Vector{Pair{Int64, Int64}})
         n = sum(last.(λ_counts)) # Every order n graph has exactly n Laplacian eigenvalues
@@ -345,17 +350,26 @@ module LaplacianSpectra
         eigvecs[idx_nonkernel] = hcat(collect(potential_nonkernel_eigvecs(n))...)
         
         cols_oneneg = _get_cols_oneneg(eigvecs, idx_kernel, n)
-        zerooneneg_bases = trues(2) # Both eigenspaces have {-1,0,1}-bases for all n ≥ 2
         
-        if n % 2 == 0 # Both eigenspaces have {-1,1}-bases for all even n ≥ 2
-            oneneg_bases = trues(2)
-        else # No odd-dimensional {-1,1}-vectors are orthogonal to the all-ones vector
-            oneneg_bases = BitVector(undef, 2)
-            oneneg_bases[idx_kernel] = true
-            oneneg_bases[idx_nonkernel] = false
-        end
+        # Test for linearly independent spanning {-1,0,1}- and {-1,1}-eigenbases
+        bases_zerooneneg = _column_span_basis.(eigvecs)
+        bases_oneneg = _column_span_basis.(getindex.(eigvecs, :, cols_oneneg))
         
-        return (eigvecs, cols_oneneg, zerooneneg_bases, oneneg_bases)
+        # {-1,1}-bases are preferable to {-1,0,1}-bases whenever they exist
+        idxs_replace = (length.(bases_zerooneneg) .== length.(bases_oneneg))
+        bases_zerooneneg[idxs_replace] = copy(bases_oneneg[idxs_replace])
+        
+        # bases_zerooneneg = trues(2) # Both eigenspaces have {-1,0,1}-bases for all n ≥ 2
+        
+        # if n % 2 == 0 # Both eigenspaces have {-1,1}-bases for all even n ≥ 2
+        #     bases_oneneg = trues(2)
+        # else # No odd-dimensional {-1,1}-vectors are orthogonal to the all-ones vector
+        #     bases_oneneg = BitVector(undef, 2)
+        #     bases_oneneg[idx_kernel] = true
+        #     bases_oneneg[idx_nonkernel] = false
+        # end
+        
+        return (eigvecs, cols_oneneg, bases_zerooneneg, bases_oneneg)
     end
     
     
@@ -392,5 +406,30 @@ module LaplacianSpectra
         end
         
         return cols_oneneg
+    end
+    
+    
+    #- FUNCTION: `_column_span_basis`
+    """
+        _column_span_basis(X)
+    
+    ADD LATER
+    
+    # Arguments
+    - `X::Matrix{Int64}`: ADD LATER
+    
+    # Returns
+    - `basis::Matrix{Int64}`: ADD LATER
+    """
+    function _column_span_basis(X::Matrix{Int64})
+        reduced_form = rref_with_pivots(X)
+        reduced_rank = rank(reduced_form[1], 1e-5)
+        
+        for comb in combinations(reduced_form[2], reduced_rank)
+            if rank(X[:, comb], 1e-5) == reduced_rank
+                basis = Int64.(X[:, comb])
+                return basis
+            end
+        end
     end
 end

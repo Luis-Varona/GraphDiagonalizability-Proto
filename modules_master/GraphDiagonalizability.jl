@@ -56,17 +56,40 @@ module GraphDiagonalizability
             (
                 eigvecs,
                 cols_oneneg,
-                zerooneneg_bases,
-                oneneg_bases,
+                bases_zerooneneg,
+                bases_oneneg,
             ) = eigvecs_zerooneneg(L, λ_counts)
             
-            if !all(zerooneneg_bases)
+            multis = last.(λ_counts)
+            
+            if any(bases_zerooneneg .<= multis)
                 Γ = DiagGraph(L, Inf, Inf, λs_sorted, missing, missing)
             else
-                sup_zerooneneg = max(last.(λ_counts))
-                !all(oneneg_bases) ? (min_oneneg = Inf) : (sup_oneneg = sup_zerooneneg)
+                sup_zerooneneg = max(multis)
+                initial_bands = sup_zerooneneg * length(multis)
                 
-                for (idx, (λ, μ)) in enumerate(λ_counts)
+                for k in (sup_zerooneneg - 1):-1:1
+                    results = is_k_orthogonalizable.(bases_zerooneneg, k)
+                    initial_bands[results] = k
+                    
+                    if all(results)
+                        sup_zerooneneg = k
+                        break
+                    end
+                    
+                    if !any(results)
+                        break
+                    end
+                end
+                
+                if any(bases_oneneg .<= multis)
+                    min_oneneg = Inf
+                else
+                    sup_oneneg = sup_zerooneneg
+                end
+                
+                for ((idx, band), (λ, μ)) in zip(enumerate(initial_bands), λ_counts)
+                # for (idx, (λ, μ)) in enumerate(λ_counts)
                     (
                         min_zerooneneg,
                         min_oneneg,
@@ -75,7 +98,7 @@ module GraphDiagonalizability
                     ) = _eigspace_bandwidths(
                         L, λ, μ, eigvecs[idx], cols_oneneg[idx];
                         min_zerooneneg=min_zerooneneg,
-                        max_zerooneneg=max_zerooneneg,
+                        max_zerooneneg=min(band - 1, max_zerooneneg),
                         min_oneneg=min_oneneg,
                         max_oneneg=max_oneneg,
                     )
