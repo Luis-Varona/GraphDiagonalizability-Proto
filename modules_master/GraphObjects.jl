@@ -1,9 +1,7 @@
 module GraphObjects
     #- EXPORTS AND IMPORTS
     export DiagGraph
-    
     using Intervals: Interval, Closed
-    using LinearAlgebra: Eigen
     
     #- TYPE: `DiagGraph`
     struct DiagGraph{
