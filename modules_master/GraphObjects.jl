@@ -5,13 +5,19 @@ module GraphObjects
     using Intervals: Interval, Closed
     using LinearAlgebra: Eigen
     
-    
     #- TYPE: `DiagGraph`
-    struct DiagGraph
+    struct DiagGraph{
+        β<:Union{Float64, Int64, Interval{Int64, Closed, Closed}},
+        B<:Union{Float64, Int64, Interval{Int64, Closed, Closed}},
+        τ<:Union{Missing, Int64},
+        T<:Union{Missing, τ},
+        S<:Union{Missing, T},
+    }
         laplacian_matrix::Matrix{Int64}
-        band_zerooneneg::Union{Int64, Interval{Int64, Closed, Closed}}
-        band_oneneg::Union{Int64, Interval{Int64, Closed, Closed}}
-        eigen_zerooneneg::Eigen{T, T, Matrix{T}, Vector{T}} where T<:Union{Missing, Int64}
-        eigen_oneneg::Eigen{τ, τ, Matrix{τ}, Vector{τ}} where τ<:Union{Missing, Int64}
+        band_zerooneneg::β
+        band_oneneg::B
+        eigvals::Vector{τ}
+        eigvecs_zerooneneg::Matrix{T}
+        eigen_oneneg::Matrix{S}
     end
 end
