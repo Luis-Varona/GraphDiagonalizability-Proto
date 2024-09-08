@@ -2,8 +2,8 @@ module GraphObjects
     #- EXPORTS AND IMPORTS
     export DiagGraph
     
-    include("GraphTests.jl")
-    using .GraphTests: is_bipartite, is_cograph
+    include("GraphFunctions.jl")
+    using .GraphFunctions: is_bipartite, is_cograph
     
     using Intervals: Interval, Closed
     using LinearAlgebra: Diagonal, diag

@@ -1,4 +1,4 @@
-module GraphTests
+module GraphFunctions
     #- EXPORTS AND IMPORTS
     using DataStructures: Stack
     using Graphs
