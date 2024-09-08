@@ -77,33 +77,59 @@ module KOrthogonalizability
         elseif k == 2
             (k_ortho, order) = _is_quasi_orthogonalizable(X)
         else
-            H = orthograph_complement(X)
+            (k_ortho, order) = _is_k_ortho_generalcase(X, k)
+        end
+        
+        return (k_ortho, order)
+    end
+    
+    
+    #- FUNCTION: `_is_k_ortho_generalcase`
+    """
+        _is_k_ortho_generalcase(X, k)
+    
+    Determine whether a matrix is `k`-orthogonalizable and find a column ordering if so.
+    
+    This helper function is only called by `is_k_orthogonalizable` when `k > 2`.
+    
+    # Arguments
+    - `X::AbstractMatrix`: the matrix to test for `k`-orthogonalizability.
+    - `k::Int64`: the orthogonalizability parameter.
+    
+    # Returns
+    - `k_ortho::Bool`: whether `X` is k-orthogonalizable.
+    - `order::Vector{Int64}`: if `k_ortho`, a `k`-orthogonal column ordering of `X`.
+        Otherwise, an empty array.
+    """
+    function _is_k_ortho_generalcase(X::AbstractMatrix, k::Int64)
+        H = orthograph_complement(X)
+        
+        # Each column can only be non-orthogonal to at most 2k - 2 others
+        if any(sum(H, dims = 2) .> 2k - 2)
+            k_ortho = false
+            order = Int64[]
+        else
+            n = size(X, 2)
+            G = falses(n, n)
             
-            # Each column can only be non-orthogonal to at most 2k - 2 others
-            if any(sum(H, dims = 2) .> 2k - 2)
+            # Construct the adjacency matrix of the Turtle graph T(n, k)
+            for i in vcat((1 - k):-1, 1:(k - 1)) # Possible non-orthogonal column pairs
+                G[diagind(G, i)] .= true
+            end
+            
+            # Determine whether `X` has at least the minimum set of orthogonal pairs
+            monomorphism = iterate(
+                subgraph_monomorphisms(SimpleGraph(G), SimpleGraph(H))
+            )
+            if isnothing(monomorphism) # `X` cannot be rearranged to be k-orthogonal
                 k_ortho = false
                 order = Int64[]
             else
-                # Construct the adjacency matrix of the Turtle graph T(n, k)
-                G = falses(n, n)
-                for i in vcat((1 - k):-1, 1:(k - 1)) # Possible non-orthogonal column pairs
-                    G[diagind(G, i)] .= true
-                end
-                
-                # Determine whether `X` has at least the minimum set of orthogonal pairs
-                monomorphism = iterate(
-                    subgraph_monomorphisms(SimpleGraph(G), SimpleGraph(H))
-                )
-                if isnothing(monomorphism) # `X` cannot be rearranged to be k-orthogonal
-                    k_ortho = false
-                    order = Int64[]
-                else
-                    k_ortho = true
-                    # The monomorphism mapping determines the k-orthogonal column ordering
-                    order = last.(sort(collect(monomorphism[1])))
-                    # To better preserve the original column ordering of `X`
-                    (order[1] > order[end]) && (order = reverse(order))
-                end
+                k_ortho = true
+                # The monomorphism mapping determines the k-orthogonal column ordering
+                order = last.(sort(collect(monomorphism[1])))
+                # To better preserve the original column ordering of `X`
+                (order[1] > order[end]) && (order = reverse(order))
             end
         end
         
@@ -149,17 +175,19 @@ module KOrthogonalizability
     """
         _is_path_subgraph(A, vertex_degrees)
     
-    ADD LATER
+    Determine whether a graph represented by some adjacency matrix is a subgraph of a path.
     
-    [Note: works only because `_is_quasi_orthogonalizable` validates maximum degree `2`]
+    This helper function only works in the context of `_is_quasi_orthogonalizable`, which
+    validates that the maximum vertex degree of the graph is `2`.
     
     # Arguments
-    - `A::BitMatrix`: ADD LATER
-    - `vertex_degrees::Vector{Int64}`: ADD LATER
+    - `A::BitMatrix`: the adjacency matrix of some graph with maximum vertex degree `2`.
+    - `vertex_degrees::Vector{Int64}`: the degree of each vertex of the graph.
     
     # Returns
-    - `path_subgraph::Bool`: ADD LATER
-    - `order::Vector{Int64}`: ADD LATER
+    - `path_subgraph::Bool`: whether the graph is a subgraph of a path.
+    - `order::Vector{Int64}`: if `path_subgraph`, an ordering that places all adjacent
+        vertices contiguous to each other. Otherwise, an empty array.
     """
     function _is_path_subgraph(A::BitMatrix, vertex_degrees::Vector{Int64})
         n = size(A, 1)
