@@ -2,6 +2,9 @@ module GraphObjects
     #- EXPORTS AND IMPORTS
     export DiagGraph
     
+    include("GraphTests.jl")
+    using .GraphTests: is_bipartite, is_cograph
+    
     using Intervals: Interval, Closed
     using LinearAlgebra: Diagonal, diag
     using PythonCall: Py, pyconvert, pyimport, pylist, pytuple
@@ -69,8 +72,8 @@ module GraphObjects
         elseif prop == :adjacency_matrix
             L = g.laplacian_matrix
             output = Diagonal(L) - L
-        elseif prop == :graph6_string
-            output = networkx_to_graph6(nx.from_numpy_array(np.array(g.adjacency_matrix)))
+        # elseif prop == :graph6_string
+        #     output = networkx_to_graph6(nx.from_numpy_array(np.array(g.adjacency_matrix)))
         
         elseif prop == :is_weighted
             output = any(x -> !(x in [0, 1]), g.adjacency_matrix)
@@ -81,12 +84,12 @@ module GraphObjects
         elseif prop == :is_weighted_regular
             output = allequal(diag(g.laplacian_matrix))
         
-        # elseif prop == :is_cograph
-        #     output = _
+        elseif prop == :is_cograph
+            output = is_cograph(g.adjacency_matrix)
         elseif prop == :is_bipartite
-            output = nx.is_bipartite(nx.from_numpy_array(np.array(g.adjacency_matrix)))
-        elseif prop == :is_planar
-            output = nx.is_planar(nx.from_numpy_array(np.array(g.adjacency_matrix)))
+            output = is_bipartite(g.adjacency_matrix)
+        # elseif prop == :is_planar
+        #     output = nx.is_planar(nx.from_numpy_array(np.array(g.adjacency_matrix)))
         end
         
         return output
