@@ -8,22 +8,25 @@ module GraphTests
     #- FUNCTION: `is_bipartite`
     """
         is_bipartite(G)
+        is_bipartite(A)
     
     Determine whether an undirected graph is bipartite.
     
+    Both SimpleGraphs and adjacency matrices are supported inputs.
+    
     # Arguments
     - `G::SimpleGraph`: an undirected graph.
+    - `A::AbstractMatrix`: an adjacency matrix (if `G` is not provided).
     
     # Keyword Arguments
     - `return_bipartition::Bool=false`: whether to return the bipartition of the graph.
     
     # Returns
-    ADD LATER
+    - `bipartite::Bool`: whether the graph is bipartite.
+    - `coloring::Tuple{Vector{Int64}, Vector{Int64}}`: if `bipartite`, a partitioning of the
+        graph vertices into two vectors. Otherwise, a tuple of empty vectors. (Only returned
+        if `return_bipartition=true`.)
     """
-    function is_bipartite(A::AbstractMatrix; return_bipartition::Bool=false)
-        return is_bipartite(SimpleGraph(A); return_bipartition=return_bipartition)
-    end
-    
     function is_bipartite(G::SimpleGraph; return_bipartition::Bool=false)
         bipartite = true
         coloring = Dict{Int64, Bool}()
@@ -57,7 +60,18 @@ module GraphTests
             node += 1
         end
         
-        return return_bipartition ? (bipartite, coloring) : bipartite
+        if return_bipartition
+            bipartition = (
+                collect(keys(filter(!last, coloring))),
+                collect(keys(filter(last, coloring))),
+            )
+        end
+        
+        return return_bipartition ? (bipartite, bipartition) : bipartite
+    end
+    
+    function is_bipartite(A::AbstractMatrix; return_bipartition::Bool=false)
+        return is_bipartite(SimpleGraph(A); return_bipartition=return_bipartition)
     end
     
     
@@ -75,5 +89,9 @@ module GraphTests
     """
     function is_cograph(G::SimpleGraph)
         return !nodesubgraph_is_isomorphic(G, path_graph(4))
+    end
+    
+    function is_cograph(A::AbstractMatrix)
+        return is_cograph(SimpleGraph(A))
     end
 end

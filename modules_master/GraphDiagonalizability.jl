@@ -50,6 +50,7 @@ module GraphDiagonalizability
     )
         n = size(L, 1)
         (spectrum_integral, λs_sorted, λ_counts) = is_spectrum_integral(L)
+        
         if !spectrum_integral
             Γ = DiagGraph(L, Inf, Inf, missing, missing, missing)
         else
