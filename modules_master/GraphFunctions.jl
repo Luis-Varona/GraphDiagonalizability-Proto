@@ -94,4 +94,22 @@ module GraphFunctions
     function is_cograph(A::AbstractMatrix)
         return is_cograph(SimpleGraph(A))
     end
+    
+    
+    #- FUNCTION: `graph6_string`
+    function graph6_string(G::SimpleGraph)
+        n = nv(G)
+        lead = Char(nv(G) + 63)
+        
+        # ADD LATER
+    end
+    
+    
+    #- FUNCTION: `_binary_rep`
+    function _binary_rep(G::SimpleGraph)
+        n = nv(G)
+        total_length = Int64(n * (n - 1) / 2)
+        
+        # ADD LATER
+    end
 end
