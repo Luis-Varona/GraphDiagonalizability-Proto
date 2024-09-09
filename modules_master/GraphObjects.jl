@@ -12,10 +12,15 @@ module GraphObjects
     np = pyimport("numpy")
     nx = pyimport("networkx")
     
+    
+    #- TYPE: `_BandwidthInterval`
+    _BandwidthInterval = Interval{Int64, Closed, Closed}
+    
+    
     #- TYPE: `DiagGraph`
     struct DiagGraph{
-        β<:Union{Float64, Int64, Interval{Int64, Closed, Closed}},
-        B<:Union{Float64, Int64, Interval{Int64, Closed, Closed}},
+        β,
+        B,
         λ<:Union{Missing, Int64},
         τ<:Union{Missing, λ},
         T<:Union{Missing, τ},
@@ -26,6 +31,60 @@ module GraphObjects
         eigvals::Vector{λ}
         eigvecs_zerooneneg::Matrix{τ}
         eigen_oneneg::Matrix{T}
+        
+        function DiagGraph(
+            laplacian_matrix::Matrix{Int64},
+            band_zerooneneg::β,
+            band_oneneg::B,
+            eigvals::Vector{λ},
+            eigvecs_zerooneneg::Matrix{τ},
+            eigen_oneneg::Matrix{T}
+        ) where {β<:Float64, B<:Float64, λ, τ, T}
+            return new{β, B, λ, τ, T}(
+                laplacian_matrix,
+                band_zerooneneg,
+                band_oneneg,
+                eigvals,
+                eigvecs_zerooneneg,
+                eigen_oneneg
+            )
+        end
+        
+        function DiagGraph(
+            laplacian_matrix::Matrix{Int64},
+            band_zerooneneg::β,
+            band_oneneg::B,
+            eigvals::Vector{λ},
+            eigvecs_zerooneneg::Matrix{τ},
+            eigen_oneneg::Matrix{T}
+        ) where {β<:_BandwidthInterval, B<:Union{Float64, _BandwidthInterval}, λ, τ, T}
+            return new{β, B, λ, τ, T}(
+                laplacian_matrix,
+                band_zerooneneg,
+                band_oneneg,
+                eigvals,
+                eigvecs_zerooneneg,
+                eigen_oneneg
+            )
+        end
+        
+        function DiagGraph(
+            laplacian_matrix::Matrix{Int64},
+            band_zerooneneg::β,
+            band_oneneg::B,
+            eigvals::Vector{λ},
+            eigvecs_zerooneneg::Matrix{τ},
+            eigen_oneneg::Matrix{T}
+        ) where {β<:Int64, B<:Union{Float64, Int64, _BandwidthInterval}, λ, τ, T}
+            return new{β, B, λ, τ, T}(
+                laplacian_matrix,
+                band_zerooneneg,
+                band_oneneg,
+                eigvals,
+                eigvecs_zerooneneg,
+                eigen_oneneg
+            )
+        end
     end
     
     
