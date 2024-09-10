@@ -38,7 +38,7 @@ module GraphObjects
             band_oneneg::B,
             eigvals::Vector{λ},
             eigvecs_zerooneneg::Matrix{τ},
-            eigen_oneneg::Matrix{T}
+            eigen_oneneg::Matrix{T},
         ) where {β<:Float64, B<:Float64, λ, τ, T}
             return new{β, B, λ, τ, T}(
                 laplacian_matrix,
@@ -56,7 +56,7 @@ module GraphObjects
             band_oneneg::B,
             eigvals::Vector{λ},
             eigvecs_zerooneneg::Matrix{τ},
-            eigen_oneneg::Matrix{T}
+            eigen_oneneg::Matrix{T},
         ) where {β<:_BandwidthInterval, B<:Union{Float64, _BandwidthInterval}, λ, τ, T}
             return new{β, B, λ, τ, T}(
                 laplacian_matrix,
@@ -74,7 +74,7 @@ module GraphObjects
             band_oneneg::B,
             eigvals::Vector{λ},
             eigvecs_zerooneneg::Matrix{τ},
-            eigen_oneneg::Matrix{T}
+            eigen_oneneg::Matrix{T},
         ) where {β<:Int64, B<:Union{Float64, Int64, _BandwidthInterval}, λ, τ, T}
             return new{β, B, λ, τ, T}(
                 laplacian_matrix,
