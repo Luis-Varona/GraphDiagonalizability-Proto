@@ -134,7 +134,7 @@ module GraphDiagonalizability
         L::AbstractMatrix{Int64},
         λ::Int64,
         μ::Int64,
-        eigenspace::Matrix{Int64},
+        eigspace::Matrix{Int64},
         cols_oneneg::Vector{Int64};
         min_zerooneneg::Int64,
         max_zerooneneg::Int64,
@@ -146,10 +146,18 @@ module GraphDiagonalizability
         if μ == 1
             band_zerooneneg = min_zerooneneg
             band_oneneg = min_oneneg
+            
+            if band_oneneg < Inf
+                basis_zerooneneg = eigspace[:, cols_oneneg[1]]
+                basis_oneneg = copy(basis_zerooneneg)
+            else
+                basis_zerooneneg = eigspace[:, 1]
+                basis_oneneg = Matrix{Int64}(undef, n, 0)
+            end
         else
             function DFS(idxs::Vector{Int64}, k::Int64, idx_set::Vector{Int64})
                 depth = length(idxs)
-                partial_basis = eigenspace[:, idxs]
+                partial_basis = eigspace[:, idxs]
                 
                 if rank(partial_basis, 1e-5) < depth
                     k_ortho = false
@@ -192,17 +200,28 @@ module GraphDiagonalizability
                     band += 1
                 end
                 
-                if !has_basis
-                    # ADD LATER - band
-                    basis = Matrix{Int64}(undef, n, 0)
-                else
-                    basis = eigenspace[:, idxs_basis]
-                end
-                
+                basis = has_basis ? eigspace[:, idxs_basis] : Matrix{Int64}(undef, n, 0)
                 return (band, basis)
             end
             
-            # ADD LATER
+            (band_oneneg, basis_oneneg) = if min_oneneg == Inf
+                (Inf, missing)
+            else
+                search_roots(cols_oneneg, min_oneneg, max_oneneg)
+            end
+            
+            (band_zerooneneg, basis_zerooneneg) = if band_oneneg <= min_zerooneneg
+                (min_zerooneneg, copy(basis_oneneg))
+            else
+                search_roots(
+                    1:size(eigspace, 2),
+                    min_zerooneneg,
+                    min(band_oneneg - 1, max_zerooneneg),
+                )
+            end
+            (band_zerooneneg >= band_oneneg) && (basis_zerooneneg = copy(basis_oneneg))
         end
+        
+        return (band_zerooneneg, band_oneneg, basis_zerooneneg, basis_oneneg)
     end
 end
