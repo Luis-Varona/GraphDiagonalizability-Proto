@@ -151,7 +151,7 @@ module GraphDiagonalizability
                 depth = length(idxs)
                 partial_basis = eigenspace[:, idxs]
                 
-                if rank(partial_basis, 1e-5) != depth
+                if rank(partial_basis, 1e-5) < depth
                     k_ortho = false
                     idxs_final = Int64[]
                 else
@@ -183,8 +183,10 @@ module GraphDiagonalizability
                 
                 while !has_basis && (band <= max_band)
                     for root in combinations(idx_set, band)
-                        (has_basis, idxs_basis) = DFS(root, band, idx_set)
-                        has_basis && break
+                        if rank(eigspace[:, root], 1e-5) == band
+                            (has_basis, idxs_basis) = DFS(root, band, idx_set)
+                            has_basis && break
+                        end
                     end
                     
                     band += 1
