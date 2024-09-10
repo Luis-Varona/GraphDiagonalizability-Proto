@@ -134,7 +134,7 @@ module GraphDiagonalizability
         L::AbstractMatrix{Int64},
         λ::Int64,
         μ::Int64,
-        eigvecs::Matrix{Int64},
+        eigenspace::Matrix{Int64},
         cols_oneneg::Vector{Int64};
         min_zerooneneg::Int64,
         max_zerooneneg::Int64,
@@ -149,7 +149,7 @@ module GraphDiagonalizability
         else
             function DFS(idxs::Vector{Int64}, k::Int64, idx_set::Vector{Int64})
                 depth = length(idxs)
-                partial_basis = eigvecs[:, idxs]
+                partial_basis = eigenspace[:, idxs]
                 
                 if rank(partial_basis, 1e-5) != depth
                     k_ortho = false
@@ -194,7 +194,7 @@ module GraphDiagonalizability
                     # ADD LATER - band
                     basis = Matrix{Int64}(undef, n, 0)
                 else
-                    basis = eigvecs[:, idxs_basis]
+                    basis = eigenspace[:, idxs_basis]
                 end
                 
                 return (band, basis)
