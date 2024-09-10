@@ -90,11 +90,8 @@ module GraphObjects
     
     #- String representation of `DiagGraph`
     function Base.show(io::IO, g::DiagGraph)
-        if g.band_zerooneneg != Inf
-            print(io, "{-1,0,1}-diagonalizable graph on $(g.order) vertices")
-        else
-            print(io, "{-1,0,1}-non-diagonalizable graph on $(g.order) vertices")
-        end
+        diag_signal = (g.band_zerooneneg != Inf) ? "" : "-non"
+        print(io, "{-1,0,1}$diag_signal-diagonalizable graph on $(g.order) vertices")
     end
     
     
