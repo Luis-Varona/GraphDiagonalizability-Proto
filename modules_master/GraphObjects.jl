@@ -46,7 +46,7 @@ module GraphObjects
                 band_oneneg,
                 eigvals,
                 eigvecs_zerooneneg,
-                eigen_oneneg
+                eigen_oneneg,
             )
         end
         
@@ -64,7 +64,7 @@ module GraphObjects
                 band_oneneg,
                 eigvals,
                 eigvecs_zerooneneg,
-                eigen_oneneg
+                eigen_oneneg,
             )
         end
         
@@ -82,7 +82,7 @@ module GraphObjects
                 band_oneneg,
                 eigvals,
                 eigvecs_zerooneneg,
-                eigen_oneneg
+                eigen_oneneg,
             )
         end
     end
