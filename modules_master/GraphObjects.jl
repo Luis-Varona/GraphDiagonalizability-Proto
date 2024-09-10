@@ -103,7 +103,7 @@ module GraphObjects
             :band_oneneg,
             :eigvals,
             :eigvecs_zerooneneg,
-            :eigvecs_oneneg
+            :eigvecs_oneneg,
         )
             output = getfield(g, prop)
         
