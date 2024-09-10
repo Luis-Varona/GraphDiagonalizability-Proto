@@ -3,14 +3,14 @@ module GraphObjects
     export DiagGraph
     
     include("GraphFunctions.jl")
-    using .GraphFunctions: is_bipartite, is_cograph
+    using .GraphFunctions: is_bipartite, is_cartesian_product, is_cograph
     
     using Intervals: Interval, Closed
     using LinearAlgebra: Diagonal, diag
-    using PythonCall: Py, pyconvert, pyimport, pylist, pytuple
+    # using PythonCall: Py, pyconvert, pyimport, pylist, pytuple
     
-    np = pyimport("numpy")
-    nx = pyimport("networkx")
+    # np = pyimport("numpy")
+    # nx = pyimport("networkx")
     
     
     #- TYPE: `_BandwidthInterval`
@@ -110,30 +110,30 @@ module GraphObjects
         )
             output = getfield(g, prop)
         
+        elseif prop == :adjacency_matrix
+            L = g.laplacian_matrix
+            output = Diagonal(L) - L
+        # elseif prop == :graph6_string
+        #     output = ADD LATER
+        
         elseif prop == :order
             output = size(g.laplacian_matrix, 1)
         elseif prop == :size
-            A_unweighted = (g.adjacency_matrix .!= 0)
-            output = Int64(sum(A_unweighted) / 2)
+            output = Int64(sum(g.adjacency_matrix .!= 0) / 2)
         elseif prop == :density
             n = g.order
             s = g.size
             output = (s == 1) ? NaN : 2s / (n * (n - 1))
         elseif prop == :weighted_density
             n = g.order
-            s = g.size
-            output = (s == 1) ? NaN : sum(g.adjacency_matrix) / (n * (n - 1))
+            output = (g.size == 1) ? NaN : sum(g.adjacency_matrix) / (n * (n - 1))
         elseif prop == :average_degree
             output = g.size / g.order
         elseif prop == :average_weighted_degree
             output = sum(g.adjacency_matrix) / (2g.order)
         
-        elseif prop == :adjacency_matrix
-            L = g.laplacian_matrix
-            output = Diagonal(L) - L
-        # elseif prop == :graph6_string
-        #     output = networkx_to_graph6(nx.from_numpy_array(np.array(g.adjacency_matrix)))
-        
+        elseif prop == :is_connected
+            output = is_connected(SimpleGraph(g.adjacency_matrix))
         elseif prop == :is_weighted
             output = any(x -> !(x in [0, 1]), g.adjacency_matrix)
         elseif prop == :is_negatively_weighted
@@ -147,16 +147,20 @@ module GraphObjects
             output = is_cograph(g.adjacency_matrix)
         elseif prop == :is_bipartite
             output = is_bipartite(g.adjacency_matrix)
-        # elseif prop == :is_planar
-        #     output = nx.is_planar(nx.from_numpy_array(np.array(g.adjacency_matrix)))
+        elseif prop == :is_cart_product
+            output = is_cartesian_product(g.adjacency_matrix)
+        elseif prop == :is_cart_product_complement
+            A_complement = .!g.adjacency_matrix
+            A_complement[diagind(A_complement)] .= false
+            output = is_cartesian_product(A_complement)
         end
         
         return output
     end
     
     
-    #- FUNCTION: `networkx_to_graph6`
-    function networkx_to_graph6(g::Py)
-        return String(pyconvert(Base.CodeUnits, nx.to_graph6_bytes(g)))[11:(end - 1)]
-    end
+    # #- FUNCTION: `networkx_to_graph6`
+    # function networkx_to_graph6(g::Py)
+    #     return String(pyconvert(Base.CodeUnits, nx.to_graph6_bytes(g)))[11:(end - 1)]
+    # end
 end

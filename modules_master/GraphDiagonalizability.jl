@@ -57,45 +57,42 @@ module GraphDiagonalizability
             (
                 eigvecs,
                 cols_oneneg,
-                bases_zerooneneg,
-                bases_oneneg,
+                bases_zerooneneg_temp,
+                bases_oneneg_temp,
             ) = eigvecs_zerooneneg(L, λ_counts)
             
             multis = last.(λ_counts)
             
-            if any(bases_zerooneneg .<= multis)
+            if any(size.(bases_zerooneneg_temp, 2) .<= multis)
                 Γ = DiagGraph(L, Inf, Inf, λs_sorted, missing, missing)
             else
+                r = length(λ_counts)
                 sup_zerooneneg = max(multis)
-                initial_bands = sup_zerooneneg * length(multis)
+                initial_bands = fill(sup_zerooneneg, r)
                 
                 for k in (sup_zerooneneg - 1):-1:1
                     results = is_k_orthogonalizable.(bases_zerooneneg, k)
                     initial_bands[results] = k
                     
-                    if all(results)
-                        sup_zerooneneg = k
-                        break
-                    end
-                    
-                    if !any(results)
-                        break
-                    end
+                    all(results) && (sup_zerooneneg = k; break)
+                    any(results) || break
                 end
                 
-                if any(bases_oneneg .<= multis)
+                if any(size.(bases_oneneg, 2) .<= multis)
                     min_oneneg = Inf
                 else
                     sup_oneneg = sup_zerooneneg
                 end
                 
+                bases_zerooneneg = Vector{Matrix{Int64}}(undef, r)
+                bases_oneneg = Vector{Matrix{Int64}}(undef, r)
+                
                 for ((idx, band), (λ, μ)) in zip(enumerate(initial_bands), λ_counts)
-                # for (idx, (λ, μ)) in enumerate(λ_counts)
                     (
                         min_zerooneneg,
                         min_oneneg,
-                        basis_zerooneneg,
-                        basis_oneneg,
+                        bases_zerooneneg[idx],
+                        bases_oneneg[idx],
                     ) = _eigspace_bandwidths(
                         L, λ, μ, eigvecs[idx], cols_oneneg[idx];
                         min_zerooneneg=min_zerooneneg,
@@ -111,12 +108,21 @@ module GraphDiagonalizability
                         )
                         break
                     end
-                    if min_zerooneneg > max_zerooneneg
-                        # Get sup_zerooneneg basis for everything
-                    end
+                    
+                    (min_zerooneneg > max_zerooneneg) && (P_zerooneneg = bases_zerooneneg_temp)
+                    (Inf > min_oneneg > max_oneneg) && (P_oneneg = bases_oneneg_temp)
+                    (min_zerooneneg > max_zerooneneg) && (min_oneneg > max_oneneg) && break
                 end
+                
+                (min_zerooneneg <= max_zerooneneg) && (P_zerooneneg = hcat(bases_zerooneneg...)) # ADD LATER (type instability)
+                (min_oneneg <= max_oneneg) && (P_oneneg = hcat(bases_oneneg...)) # ADD LATER (type instability)
+                (min_oneneg == Inf) && (P_oneneg = missing) # ADD LATER (type instability)
+                
+                Γ = DiagGraph(L, min_zerooneneg, min_oneneg, λs_sorted, P_zerooneneg, P_oneneg)
             end
         end
+        
+        return Γ
     end
     
     
@@ -135,6 +141,66 @@ module GraphDiagonalizability
         min_oneneg::Union{Float64, Int64},
         max_oneneg::Int64,
     )
-        3
+        n = size(L, 1)
+        
+        if μ == 1
+            band_zerooneneg = min_zerooneneg
+            band_oneneg = min_oneneg
+        else
+            function DFS(idxs::Vector{Int64}, k::Int64, idx_set::Vector{Int64})
+                depth = length(idxs)
+                partial_basis = eigvecs[:, idxs]
+                
+                if rank(partial_basis, 1e-5) != depth
+                    k_ortho = false
+                    idxs_final = Int64[]
+                else
+                    (k_ortho, order) = is_k_orthogonalizable(partial_basis, k)
+                    
+                    if !k_ortho
+                        idxs_final = Int64[]
+                    elseif depth == μ
+                        idxs_final = idxs[order]
+                    else
+                        k_ortho = false
+                        idxs_final = Int64[]
+                        last = idxs[end]
+                        
+                        for idx_next in filter(i -> i > last, idx_set)
+                            (k_ortho, idxs_final) = DFS(vcat(idxs, idx_next), k, idx_set)
+                            k_ortho && break
+                        end
+                    end
+                end
+                
+                return (k_ortho, idxs_final)
+            end
+            
+            function search_roots(idx_set::Vector{Int64}, min_band::Int64, max_band::Int64)
+                has_basis = false
+                idxs_basis = Int64[]
+                band = min_band
+                
+                while !has_basis && (band <= max_band)
+                    for root in combinations(idx_set, band)
+                        (has_basis, idxs_basis) = DFS(root, band, idx_set)
+                        has_basis && break
+                    end
+                    
+                    band += 1
+                end
+                
+                if !has_basis
+                    # ADD LATER - band
+                    basis = Matrix{Int64}(undef, n, 0)
+                else
+                    basis = eigvecs[:, idxs_basis]
+                end
+                
+                return (band, basis)
+            end
+            
+            # ADD LATER
+        end
     end
 end

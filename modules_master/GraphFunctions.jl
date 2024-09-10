@@ -7,12 +7,12 @@ module GraphFunctions
     
     #- FUNCTION: `is_bipartite`
     """
-        is_bipartite(G)
-        is_bipartite(A)
+        is_bipartite(G; return_bipartition=false)
+        is_bipartite(A; return_bipartition=false)
     
     Determine whether an undirected graph is bipartite.
     
-    Both SimpleGraphs and adjacency matrices are supported inputs.
+    Both SimpleGraphs and adjacency matrices are supported input formats.
     
     # Arguments
     - `G::SimpleGraph`: an undirected graph.
@@ -75,17 +75,46 @@ module GraphFunctions
     end
     
     
-    #- FUNCTION: `is_cograph`
+    #- FUNCTION: `is_cartesian_product`
     """
-        is_cograph(G)
+        is_cartesian_product(G)
+        is_cartesian_product(A)
     
-    Determine whether an undirected graph is a cograph.
+    Determine whether an undirected graph is a Cartesian product.
+    
+    Both SimpleGraphs and adjacency matrices are supported input formats.
     
     # Arguments
     - `G::SimpleGraph`: an undirected graph.
+    - `A::AbstractMatrix`: an adjacency matrix (if `G` is not provided).
     
     # Returns
-    - `Bool`: whether `G` is a cograph.
+    - `Bool`: whether the graph is a Cartesian product.
+    """
+    function is_cartesian_product(G::SimpleGraph)
+        3 # ADD LATER
+    end
+    
+    # function is_cartesian_product(A::AbstractMatrix)
+    #     return is_cartesian_product(SimpleGraph(A))
+    # end
+    
+    
+    #- FUNCTION: `is_cograph`
+    """
+        is_cograph(G)
+        is_cograph(A)
+    
+    Determine whether an undirected graph is a cograph.
+    
+    Both SimpleGraphs and adjacency matrices are supported input formats.
+    
+    # Arguments
+    - `G::SimpleGraph`: an undirected graph.
+    - `A::AbstractMatrix`: an adjacency matrix (if `G` is not provided).
+    
+    # Returns
+    - `Bool`: whether the graph is a cograph.
     """
     function is_cograph(G::SimpleGraph)
         return !nodesubgraph_is_isomorphic(G, path_graph(4))
