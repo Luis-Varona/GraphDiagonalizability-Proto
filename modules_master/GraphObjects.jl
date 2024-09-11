@@ -5,6 +5,7 @@ module GraphObjects
     include("GraphFunctions.jl")
     using .GraphFunctions: is_bipartite, is_cartesian_product, is_cograph
     
+    using Graphs: SimpleGraph, is_connected
     using Intervals: Interval, Closed
     using LinearAlgebra: Diagonal, diag
     # using PythonCall: Py, pyconvert, pyimport, pylist, pytuple
