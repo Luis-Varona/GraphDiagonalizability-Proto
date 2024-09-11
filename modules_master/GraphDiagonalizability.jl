@@ -101,22 +101,36 @@ module GraphDiagonalizability
                         max_oneneg=max_oneneg,
                     )
                     
-                    if isa(min_zerooneneg, Interval)
-                        min_zerooneneg = Interval{Closed, Closed}(
-                            min_zerooneneg.first,
-                            sup_zerooneneg - 1,
-                        )
-                        break
-                    end
+                    # if isa(min_zerooneneg, Interval)
+                    #     min_zerooneneg = Interval{Closed, Closed}(
+                    #         min_zerooneneg.first,
+                    #         sup_zerooneneg - 1,
+                    #     )
+                    #     break
+                    # end
                     
                     (min_zerooneneg > max_zerooneneg) && (P_zerooneneg = bases_zerooneneg_temp)
                     (Inf > min_oneneg > max_oneneg) && (P_oneneg = bases_oneneg_temp)
                     (min_zerooneneg > max_zerooneneg) && (min_oneneg > max_oneneg) && break
                 end
                 
-                (min_zerooneneg <= max_zerooneneg) && (P_zerooneneg = hcat(bases_zerooneneg...)) # ADD LATER (type instability)
-                (min_oneneg <= max_oneneg) && (P_oneneg = hcat(bases_oneneg...)) # ADD LATER (type instability)
-                (min_oneneg == Inf) && (P_oneneg = missing) # ADD LATER (type instability)
+                # ADD LATER / FIX: type instabilities in this block
+                if min_zerooneneg > max_zerooneneg
+                    band_zerooneneg = min_zerooneneg .. max(initial_bands...)
+                else
+                    band_zerooneneg = min_zerooneneg
+                    P_zerooneneg = hcat(bases_zerooneneg...)
+                end
+                
+                if min_oneneg == Inf
+                    band_oneneg = min_oneneg
+                    P_oneneg = [missing;;]
+                elseif min_oneneg > max_oneneg
+                    band_oneneg = min_oneneg .. max(initial_bands...)
+                else
+                    band_oneneg = min_oneneg
+                    P_oneneg = hcat(bases_oneneg...)
+                end
                 
                 Γ = DiagGraph(L, min_zerooneneg, min_oneneg, λs_sorted, P_zerooneneg, P_oneneg)
             end

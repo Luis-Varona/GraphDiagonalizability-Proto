@@ -18,7 +18,7 @@ module GraphObjects
     
     
     #- TYPE: `DiagGraph`
-    struct DiagGraph{
+    struct DiagGraph{ # ADD LATER: Type restrictions on bandwidths based on `eigvals`
         β,
         B,
         λ<:Union{Missing, Int64},
@@ -30,7 +30,7 @@ module GraphObjects
         band_oneneg::B
         eigvals::Vector{λ}
         eigvecs_zerooneneg::Matrix{τ}
-        eigen_oneneg::Matrix{T}
+        eigvecs_oneneg::Matrix{T}
         
         function DiagGraph(
             laplacian_matrix::Matrix{Int64},
@@ -38,7 +38,7 @@ module GraphObjects
             band_oneneg::B,
             eigvals::Vector{λ},
             eigvecs_zerooneneg::Matrix{τ},
-            eigen_oneneg::Matrix{T},
+            eigvecs_oneneg::Matrix{T},
         ) where {β<:Float64, B<:Float64, λ, τ, T}
             return new{β, B, λ, τ, T}(
                 laplacian_matrix,
@@ -46,7 +46,7 @@ module GraphObjects
                 band_oneneg,
                 eigvals,
                 eigvecs_zerooneneg,
-                eigen_oneneg,
+                eigvecs_oneneg,
             )
         end
         
@@ -56,7 +56,7 @@ module GraphObjects
             band_oneneg::B,
             eigvals::Vector{λ},
             eigvecs_zerooneneg::Matrix{τ},
-            eigen_oneneg::Matrix{T},
+            eigvecs_oneneg::Matrix{T},
         ) where {β<:_BandwidthInterval, B<:Union{Float64, _BandwidthInterval}, λ, τ, T}
             return new{β, B, λ, τ, T}(
                 laplacian_matrix,
@@ -64,7 +64,7 @@ module GraphObjects
                 band_oneneg,
                 eigvals,
                 eigvecs_zerooneneg,
-                eigen_oneneg,
+                eigvecs_oneneg,
             )
         end
         
@@ -74,7 +74,7 @@ module GraphObjects
             band_oneneg::B,
             eigvals::Vector{λ},
             eigvecs_zerooneneg::Matrix{τ},
-            eigen_oneneg::Matrix{T},
+            eigvecs_oneneg::Matrix{T},
         ) where {β<:Int64, B<:Union{Float64, Int64, _BandwidthInterval}, λ, τ, T}
             return new{β, B, λ, τ, T}(
                 laplacian_matrix,
@@ -82,7 +82,7 @@ module GraphObjects
                 band_oneneg,
                 eigvals,
                 eigvecs_zerooneneg,
-                eigen_oneneg,
+                eigvecs_oneneg,
             )
         end
     end
@@ -129,21 +129,21 @@ module GraphObjects
         elseif prop == :average_weighted_degree
             output = sum(g.adjacency_matrix) / (2g.order)
         
-        elseif prop == :is_connected
-            output = is_connected(SimpleGraph(g.adjacency_matrix))
         elseif prop == :is_weighted
             output = any(x -> !(x in [0, 1]), g.adjacency_matrix)
         elseif prop == :is_negatively_weighted
             output = any(g.adjacency_matrix .< 0)
+        elseif prop == :is_connected
+            output = is_connected(SimpleGraph(g.adjacency_matrix))
         elseif prop == :is_regular
             output = allequal(sum(g.adjacency_matrix .!= 0, dims = 2))
         elseif prop == :is_weighted_regular
             output = allequal(diag(g.laplacian_matrix))
+        elseif prop == :is_bipartite
+            output = is_bipartite(g.adjacency_matrix)
         
         elseif prop == :is_cograph
             output = is_cograph(g.adjacency_matrix)
-        elseif prop == :is_bipartite
-            output = is_bipartite(g.adjacency_matrix)
         elseif prop == :is_cart_product
             output = is_cartesian_product(g.adjacency_matrix)
         elseif prop == :is_cart_product_complement
