@@ -1,7 +1,4 @@
 module UniqueWithTolerance    
-    using Distributions: Uniform # Only for test case
-    a = 1 .+ rand(Uniform(-120e-9, 120e-9), 240) # Temporary test case
-    
     uniquetol(
         vec::AbstractVector, rtol::Real;
         return_indices::Bool=false, return_counts::Bool=false, occurrence::String="highest",
