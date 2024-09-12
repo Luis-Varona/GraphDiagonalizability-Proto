@@ -34,6 +34,9 @@ module UniqueWithTolerance
         return_counts::Bool=false,
         occurrence::String="highest",
     ) where T
+        atol < 0 && throw(ArgumentError("`atol` must be nonnegative"))
+        rtol < 0 && throw(ArgumentError("`rtol` must be nonnegative"))
+        
         if !(occurrence in ("highest", "lowest"))
             throw(ArgumentError("`occurrence` must be either \"highest\" or \"lowest\""))
         end
