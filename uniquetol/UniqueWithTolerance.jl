@@ -32,7 +32,7 @@ module UniqueWithTolerance
             isclose(x, y) = isapprox(x, y; atol=atol, rtol=rtol)
             
             perm_sorted = sortperm(vec)
-            sorted_vec = permute!(vec, perm_sorted)
+            sorted_vec = vec[perm_sorted]
             idxs_unique = Int64[]
             idx = 1
             idx_switch = 0
