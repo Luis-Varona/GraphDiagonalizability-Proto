@@ -5,7 +5,7 @@ module UniqueWithTolerance
                   return_counts=false, occurrence="highest")
     
     ADD LATER
-    
+
     # Arguments
     - `vec::AbstractVector{T}`: ADD LATER
     
@@ -21,6 +21,9 @@ module UniqueWithTolerance
     - `indices_unique::Vector{Int64}`: ADD LATER
     - `inverse_unique::Vector{Int64}`: ADD LATER
     - `counts_unique::Vector{Int64}`: ADD LATER
+    
+    # Throws
+    - `ArgumentError`: ADD LATER
     
     # Examples
     ADD LATER
