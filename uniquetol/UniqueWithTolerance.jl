@@ -69,7 +69,7 @@ module UniqueWithTolerance
         return output
     end
     
-    # function bar(x, n)
+    # function foo(x, n)
     #     R = rand(n)
     #     for r in R
     #         x ^= r
@@ -82,6 +82,6 @@ module UniqueWithTolerance
     
     # t = [3.0, 3.0, 3.0, 4.0, 4.0, 7.0]
     # N = [5, 5, 3, 7, 4, 6]
-    # t = bar.(t, N)
+    # t = foo.(t, N)
     # a = [1 + x*1e-9 for x in -107:108]
 end
