@@ -4,7 +4,7 @@ using .UniqueWithTolerance: uniquetol
 using Distributions: Uniform
 using Random: shuffle!
 
-function main()
+function GetVariables()
     #-
     numOnes = rand(1:13)
     ctsInitial = Vector{Int64}(undef, 100)
@@ -26,11 +26,22 @@ function main()
     shuffle!(testArr)
 
     #-
-    (u, ix, cts) = uniquetol(testArr; return_indices=true, return_counts=true)
+    (u, ix, inv, cts) = uniquetol(
+        testArr;
+        return_indices=true, return_inverse=true, return_counts=true,
+    )
     spaces = diff(u)
     
     #-
-    return (testArr=testArr, u=u, ix=ix, cts=cts, spaces=spaces)
+    return (testArr=testArr, u=u, ix=ix, inv=inv, cts=cts, spaces=spaces)
 end
 
-(testArr, u, ix, cts, spaces) = main()
+function main()
+    global variables = GetVariables()
+    global (testArr, u, ix, inv, cts, spaces) = variables
+    print("`return_index` functionality working: "); display(testArr[ix] == u)
+    print("`return_inverse` functionality working: "); display(testArr ≈ u[inv])
+    println(); display(variables)
+end
+
+main()
